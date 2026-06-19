@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lendas Medievais - TCG</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar style */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        /* Medieval golden text shine */
+        .gold-shine {
+            background: linear-gradient(to right, #f59e0b, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <header class="bg-slate-900 border-b border-slate-800 p-3 sticky top-0 z-50 shadow-md">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <!-- Jogador 1 Placar -->
+            <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-blue-500/30">
+                <div class="text-left">
+                    <span id="label-p1-name" class="text-[10px] text-blue-400 font-bold block uppercase">Jogador 1</span>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="alterarPlacar('p1', -1)" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded flex items-center justify-center">-</button>
+                        <span id="score-p1" class="text-lg font-black text-blue-300">0</span>
+                        <button onclick="alterarPlacar('p1', 1)" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded flex items-center justify-center">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Identificador Central -->
+            <div class="text-center">
+                <span class="gold-shine font-extrabold text-sm tracking-widest block uppercase">Lendas Medievais</span>
+                <span id="round-indicator" class="text-[10px] bg-slate-800 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20 uppercase font-mono">Rodada 1/10</span>
+            </div>
+
+            <!-- Jogador 2 Placar -->
+            <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-red-500/30">
+                <div class="text-right">
+                    <span id="label-p2-name" class="text-[10px] text-red-400 font-bold block uppercase">Jogador 2</span>
+                    <div class="flex items-center gap-1.5 justify-end">
+                        <button onclick="alterarPlacar('p2', -1)" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded flex items-center justify-center">-</button>
+                        <span id="score-p2" class="text-lg font-black text-red-300">0</span>
+                        <button onclick="alterarPlacar('p2', 1)" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded flex items-center justify-center">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col justify-center max-w-md w-full mx-auto p-4 space-y-4">
+
+        <!-- TELA DE SETUP INICIAL -->
+        <section id="screen-setup" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div class="text-center space-y-2">
+                <div class="text-4xl">🏰</div>
+                <h2 class="text-xl font-bold text-amber-400 uppercase tracking-wider">Configurar Partida</h2>
+                <p class="text-xs text-slate-400">Insira o nome dos duelistas para iniciar a jornada.</p>
+            </div>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jogador 1 (Azul)</label>
+                    <input type="text" id="input-p1-name" value="Arthur" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-blue-300 font-bold focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jogador 2 (Vermelho)</label>
+                    <input type="text" id="input-p2-name" value="Odin" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-red-300 font-bold focus:outline-none focus:border-red-500">
+                </div>
+            </div>
+
+            <button onclick="iniciarJogo()" class="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-black py-3 rounded-xl transition-all shadow-lg text-sm uppercase tracking-widest mt-2">
+                ⚔️ Começar Duelo
+            </button>
+        </section>
+
+        <section id="screen-gatekeeper" class="hidden bg-slate-950 border border-amber-500/30 rounded-2xl p-6 shadow-2xl text-center space-y-6 py-12">
+            <div class="space-y-3">
+                <div id="gatekeeper-icon" class="text-5xl animate-bounce">🛡️</div>
+                <h2 id="gatekeeper-title" class="text-xl font-black uppercase text-amber-400 tracking-wider">Passar Dispositivo</h2>
+                <p id="gatekeeper-desc" class="text-sm text-slate-300">Entregue o celular para <span class="font-bold text-amber-400" id="gatekeeper-player-name">Jogador</span>.</p>
+                <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 text-xs text-slate-400">
+                    Garanta que o outro jogador não veja a tela para manter suas táticas sob absoluto segredo!
+                </div>
+            </div>
+
+            <button onclick="entrarTurnoAtivo()" class="w-full bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/40 font-bold py-3 rounded-xl transition-all text-sm uppercase tracking-wider">
+                🔓 Revelar Minhas Cartas
+            </button>
+        </section>
+
+        <section id="screen-gameplay" class="hidden space-y-4">
+            
+            <!-- Barra de Status e Filtros Secretos -->
+            <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex justify-between items-center shadow-lg">
+                <div>
+                    <span class="text-[10px] text-slate-400 block uppercase">Planejamento de</span>
+                    <span id="gameplay-player-title" class="text-sm font-black text-amber-400 uppercase">Jogador 1</span>
+                </div>
+                <!-- Toggle de Ocultação para não selecionados -->
+                <label class="flex items-center gap-2 cursor-pointer bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                    <input type="checkbox" id="toggle-hide-unselected" onchange="renderizarDeckAtivo()" class="accent-amber-500 rounded">
+                    <span class="text-[10px] uppercase font-bold text-slate-300">Foco Tático 👁️</span>
+                </label>
+            </div>
+
+            <!-- CONTAINER DO DECK SECRETO -->
+            <div class="space-y-4">
+                
+                <!-- 1. SELEÇÃO DE HERÓIS -->
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-blue-400">🛡️ 1. Escolha seu Herói</span>
+                        <span class="text-[9px] text-slate-500 uppercase">Obrigatório</span>
+                    </div>
+                    <div id="deck-herois" class="grid grid-cols-1 gap-2.5 max-h-[220px] overflow-y-auto pr-1">
+                        <!-- Gerado Dinamicamente -->
+                    </div>
+                </div>
+
+                <!-- 2. SELEÇÃO DE HABILIDADES -->
+                <div id="section-habilidades" class="hidden space-y-1.5">
+                    <span class="text-xs font-bold uppercase tracking-wider text-purple-400 block">⚡ 2. Escolha a Habilidade</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="selecionarHabilidade('Ativa')" id="btn-hab-ativa" class="bg-slate-900 border border-slate-800 hover:border-purple-500 p-2.5 rounded-xl text-left transition-all">
+                            <span class="text-purple-400 font-extrabold text-[11px] uppercase block">Habilidade Ativa</span>
+                            <p id="desc-hab-ativa" class="text-[9px] text-slate-400 mt-1 leading-snug">Causa bônus padrão ou dano direto.</p>
+                        </button>
+                        <button onclick="selecionarHabilidade('Suprema')" id="btn-hab-suprema" class="bg-slate-900 border border-slate-800 hover:border-purple-500 p-2.5 rounded-xl text-left transition-all">
+                            <span class="text-red-400 font-extrabold text-[11px] uppercase block">Habilidade Suprema</span>
+                            <p id="desc-hab-suprema" class="text-[9px] text-slate-400 mt-1 leading-snug">Efeito devastador (Disponível).</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. BOOSTS E ITENS (GRID LATERAL) -->
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-1">🧪 3. Boost (Opcional)</span>
+                        <div id="deck-boosts" class="space-y-1.5 max-h-[140px] overflow-y-auto pr-1"></div>
+                    </div>
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-500 block mb-1">💍 4. Item (Opcional)</span>
+                        <div id="deck-itens" class="space-y-1.5 max-h-[140px] overflow-y-auto pr-1"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 border-2 border-slate-800 rounded-xl p-3 shadow-inner">
+                <span class="text-[10px] text-slate-500 uppercase font-black tracking-wider block mb-1.5 text-center">Ficha de Atributos Estimados (Com Buffs)</span>
+                <div class="grid grid-cols-4 gap-2 text-center">
+                    <div class="bg-slate-900 p-1.5 rounded-lg border border-slate-800">
+                        <span class="text-[9px] text-slate-400 block uppercase">Vida</span>
+                        <span id="calc-hp" class="text-sm font-bold text-red-400">-</span>
+                    </div>
+                    <div class="bg-slate-900 p-1.5 rounded-lg border border-slate-800">
+                        <span class="text-[9px] text-slate-400 block uppercase">Defesa</span>
+                        <span id="calc-df" class="text-sm font-bold text-blue-400">-</span>
+                    </div>
+                    <div class="bg-slate-900 p-1.5 rounded-lg border border-slate-800">
+                        <span class="text-[9px] text-slate-400 block uppercase">Ataque</span>
+                        <span id="calc-at" class="text-sm font-bold text-orange-400">-</span>
+                    </div>
+                    <div class="bg-slate-900 p-1.5 rounded-lg border border-slate-800">
+                        <span class="text-[9px] text-slate-400 block uppercase">Velocidade</span>
+                        <span id="calc-vl" class="text-sm font-bold text-green-400">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botão de Confirmação Oculta -->
+            <button onclick="salvarEscolhaOculta()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold py-3.5 rounded-xl text-xs uppercase tracking-widest shadow-lg">
+                🔒 Confirmar e Ocultar Escolha
+            </button>
+        </section>
+
+        <section id="screen-resolution" class="hidden space-y-4">
+            <div class="bg-slate-900 border-2 border-amber-500/40 rounded-2xl p-4 shadow-2xl space-y-3">
+                <h3 class="text-center font-black text-amber-400 uppercase tracking-wider text-base">💥 Arena de Revelação 💥</h3>
+                
+                <!-- Cards Revelados Lado a Lado -->
+                <div class="grid grid-cols-2 gap-3 pb-3 border-b border-slate-800">
+                    <!-- P1 Revelado -->
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-blue-500/40 text-center space-y-1">
+                        <span id="rev-p1-owner" class="text-[9px] text-blue-400 font-bold uppercase">Jogador 1</span>
+                        <h4 id="rev-p1-name" class="font-bold text-xs text-white">-</h4>
+                        <div class="grid grid-cols-2 gap-1 text-[9px] font-mono mt-1">
+                            <span class="bg-slate-900 text-red-400 rounded py-0.5" id="rev-p1-hp">❤️ -</span>
+                            <span class="bg-slate-900 text-blue-400 rounded py-0.5" id="rev-p1-df">🛡️ -</span>
+                            <span class="bg-slate-900 text-orange-400 rounded py-0.5" id="rev-p1-at">⚔️ -</span>
+                            <span class="bg-slate-900 text-green-400 rounded py-0.5" id="rev-p1-vl">⚡ -</span>
+                        </div>
+                        <div class="text-[8px] text-slate-400 pt-1 border-t border-slate-900" id="rev-p1-details">
+                            -
+                        </div>
+                    </div>
+
+                    <!-- P2 Revelado -->
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-red-500/40 text-center space-y-1">
+                        <span id="rev-p2-owner" class="text-[9px] text-red-400 font-bold uppercase">Jogador 2</span>
+                        <h4 id="rev-p2-name" class="font-bold text-xs text-white">-</h4>
+                        <div class="grid grid-cols-2 gap-1 text-[9px] font-mono mt-1">
+                            <span class="bg-slate-900 text-red-400 rounded py-0.5" id="rev-p2-hp">❤️ -</span>
+                            <span class="bg-slate-900 text-blue-400 rounded py-0.5" id="rev-p2-df">🛡️ -</span>
+                            <span class="bg-slate-900 text-orange-400 rounded py-0.5" id="rev-p2-at">⚔️ -</span>
+                            <span class="bg-slate-900 text-green-400 rounded py-0.5" id="rev-p2-vl">⚡ -</span>
+                        </div>
+                        <div class="text-[8px] text-slate-400 pt-1 border-t border-slate-900" id="rev-p2-details">
+                            -
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log Passo a Passo de Ações -->
+                <div class="space-y-1">
+                    <span class="text-[10px] text-slate-500 uppercase font-black block">Histórico do Confronto</span>
+                    <div id="combat-log" class="bg-slate-950 p-3 rounded-xl border border-slate-850 max-h-[160px] overflow-y-auto space-y-1.5 font-mono text-[10px] text-slate-300">
+                        <!-- Gerado Dinamicamente -->
+                    </div>
+                </div>
+
+                <button onclick="avancarParaProximaRodada()" class="w-full bg-slate-100 hover:bg-white text-slate-950 font-black py-3 rounded-xl text-xs uppercase tracking-widest shadow-lg">
+                    Avançar para Próxima Rodada ➡️
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-900 p-2.5 text-center text-[10px] text-slate-500 border-t border-slate-800">
+        Desenvolvido para pass-and-play seguro. Resetar partida? <button onclick="resetarDueloCompleto()" class="text-amber-500 underline font-bold">Clique aqui</button>
+    </footer>
+
+    <script>
+        // Web Audio API para reproduzir efeitos sonoros nostálgicos e imersivos
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'select') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.15);
+                } else if (type === 'combat') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'win') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+                }
+            } catch (e) {
+                // Silencia se houver bloqueio do navegador
+            }
+        }
+
+        // Banco de Dados estruturado das cartas do jogo Lendas Medievais
+        const COMPLETO_HEROIS = [
+            // Guerreiros
+            { id: "thor", nome: "Thor", faccao: "Nórdica", classe: "Guerreiro", hp: 20, df: 4, at: 15, vl: 4, passiva: "+2 AT se alvo tem mais HP.", ativa: "Causa 4 de dano fixo (ignora DF).", suprema: "Dobra seu AT na rodada.", raridade: "Lendário" },
+            { id: "aquiles", nome: "Aquiles", faccao: "Grega", classe: "Guerreiro", hp: 18, df: 5, at: 14, vl: 6, passiva: "Imune a debuffs de AT.", ativa: "+3 VL na rodada.", suprema: "Executa se alvo estiver abaixo de 8 HP.", raridade: "Lendário" },
+            { id: "lancelot", nome: "Lancelot", faccao: "Celta", classe: "Guerreiro", hp: 22, df: 5, at: 13, vl: 5, passiva: "+2 DF quando ataca.", ativa: "Transfere 3 DF do oponente para si.", suprema: "Causa dano igual ao AT + DF.", raridade: "Épica" },
+            { id: "arthur", nome: "Arthur Pendragon", faccao: "Medieval", classe: "Guerreiro", hp: 25, df: 4, at: 12, vl: 5, passiva: "+1 em tudo por item equipado.", ativa: "Cura 4 de HP.", suprema: "+5 de AT permanente.", raridade: "Épica" },
+            { id: "cuchulainn", nome: "Cu Chulainn", faccao: "Celta", classe: "Guerreiro", hp: 15, df: 3, at: 15, vl: 8, passiva: "Se bater primeiro, +3 AT.", ativa: "+2 VL permanente.", suprema: "Causa 15 dano puro, perde 5 HP.", raridade: "Épica" },
+            { id: "anubis", nome: "Anúbis", faccao: "Egípcia", classe: "Guerreiro", hp: 20, df: 3, at: 14, vl: 4, passiva: "+1 AT para cada herói aliado caído.", ativa: "Reduz o AT do inimigo em 3.", suprema: "Causa dano igual ao AT do inimigo.", raridade: "Rara" },
+            
+            // Tanques
+            { id: "odin", nome: "Odin", faccao: "Nórdica", classe: "Tanque", hp: 30, df: 7, at: 5, vl: 2, passiva: "DF nunca reduz abaixo de 5.", ativa: "Absorve 3 de AT do oponente.", suprema: "Recupera toda a DF inicial.", raridade: "Lendário" },
+            { id: "hercules", nome: "Hércules", faccao: "Grega", classe: "Tanque", hp: 28, df: 6, at: 8, vl: 3, passiva: "Reflete 2 de dano físico recebido.", ativa: "Ganha +4 de DF nesta rodada.", suprema: "Remove todos os buffs e +5 AT.", raridade: "Lendário" },
+            { id: "osiris", nome: "Osíris", faccao: "Egípcia", classe: "Tanque", hp: 30, df: 5, at: 6, vl: 1, passiva: "Cura 2 de HP ao fim da rodada.", ativa: "Reduz a VL do inimigo a 1.", suprema: "Revive imediatamente se for derrotado.", raridade: "Épica" },
+            { id: "galahad", nome: "Galahad", faccao: "Medieval", classe: "Tanque", hp: 26, df: 7, at: 5, vl: 3, passiva: "Bloqueia ativas de Trapaceiros.", ativa: "Transforma metade de DF em AT.", suprema: "Fica imune a qualquer dano.", raridade: "Épica" },
+            { id: "balar", nome: "Balar", faccao: "Celta", classe: "Tanque", hp: 25, df: 6, at: 7, vl: 2, passiva: "Causa 50% de DF perdida ao alvo.", ativa: "Rouba 3 de HP do oponente.", suprema: "Zera a DF inimiga na rodada.", raridade: "Rara" },
+            { id: "heimdall", nome: "Heimdall", faccao: "Nórdica", classe: "Tanque", hp: 27, df: 6, at: 6, vl: 4, passiva: "Sempre ganha empates de VL.", ativa: "Revela item antes do combate.", suprema: "+10 de DF permanente.", raridade: "Rara" },
+
+            // Magos
+            { id: "loki", nome: "Loki", faccao: "Nórdica", classe: "Mago", hp: 16, df: 3, at: 9, vl: 7, passiva: "Copia passiva do adversário.", ativa: "Troca AT com o do alvo nesta rodada.", suprema: "Cancela Suprema do oponente.", raridade: "Lendário" },
+            { id: "zeus", nome: "Zeus", faccao: "Grega", classe: "Mago", hp: 18, df: 3, at: 11, vl: 6, passiva: "Ataques ignoram 50% da DF.", ativa: "Causa 5 de dano elétrico fixo.", suprema: "Dano massivo de 12.", raridade: "Lendário" },
+            { id: "isis", nome: "Ísis", faccao: "Egípcia", classe: "Mago", hp: 20, df: 4, at: 8, vl: 5, passiva: "Boosts de cura curam +3 extra.", ativa: "+3 DF e +3 AT na próxima rodada.", suprema: "Remove penalidades e cura 15 HP.", raridade: "Épica" },
+            { id: "merlin", nome: "Merlin", faccao: "Medieval", classe: "Mago", hp: 15, df: 2, at: 12, vl: 6, passiva: "Imune a silenciamentos.", ativa: "Copia último boost jogado.", suprema: "Troca HP com alvo se estiver menor.", raridade: "Épica" },
+            
+            // Trapaceiros
+            { id: "hermes", nome: "Hermes", faccao: "Grega", classe: "Trapaceiro", hp: 14, df: 2, at: 8, vl: 10, passiva: "Sempre ataca primeiro.", ativa: "Cancela item do oponente na rodada.", suprema: "Rouba o Boost inimigo jogado.", raridade: "Lendário" },
+            { id: "set", nome: "Set", faccao: "Egípcia", classe: "Trapaceiro", hp: 19, df: 3, at: 9, vl: 6, passiva: "Inverte bônus de itens do alvo.", ativa: "Reduz a VL do oponente em 4.", suprema: "Bloqueia ataque do inimigo.", raridade: "Épica" },
+            { id: "robin", nome: "Robin Hood", faccao: "Medieval", classe: "Trapaceiro", hp: 16, df: 3, at: 10, vl: 8, passiva: "Ignora DF se sua VL for maior.", ativa: "Rouba 2 de AT permanentemente.", suprema: "Dano igual à diferença de HP.", raridade: "Rara" }
+        ];
+
+        const COMPLETO_BOOSTS = [
+            { id: "b_furia", nome: "Fúria de Berserker", tipo: "ataque", valor: 5, descricao: "+5 de AT nesta rodada" },
+            { id: "b_bencao", nome: "Bênção de Ísis", tipo: "cura", valor: 6, descricao: "Cura 6 de HP instantâneo" },
+            { id: "b_casca", nome: "Casca de Carvalho", tipo: "defesa", valor: 7, descricao: "+7 de DF nesta rodada" },
+            { id: "b_vento", nome: "Vento de Hermes", tipo: "velocidade", valor: 4, descricao: "+4 de VL nesta rodada" },
+            { id: "b_runas", nome: "Runas de Quebra", tipo: "reduzir_df", valor: 6, descricao: "-6 de DF ao oponente" },
+            { id: "b_sacrificio", nome: "Sacrifício Divino", tipo: "sacrificio", valor: 7, descricao: "Perde 3 HP para +7 AT" }
+        ];
+
+        const COMPLETO_ITENS = [
+            { id: "i_excalibur", nome: "Excalibur", mod_at: 3, mod_df: 0, mod_vl: 0, mod_hp: 0, descricao: "+3 AT permanente" },
+            { id: "i_pridwen", nome: "Pridwen", mod_at: 0, mod_df: 4, mod_vl: 0, mod_hp: 0, descricao: "+4 DF permanente" },
+            { id: "i_mjolnir", nome: "Mjölnir", mod_at: 4, mod_df: 0, mod_vl: 0, mod_hp: 0, descricao: "+4 AT permanente" },
+            { id: "i_aegis", nome: "Aegis", mod_at: 0, mod_df: 3, mod_vl: 0, mod_hp: 0, descricao: "+3 DF e proteção" },
+            { id: "i_ankh", nome: "Ankh da Vida", mod_at: 0, mod_df: 0, mod_vl: 0, mod_hp: 5, descricao: "+5 HP máximo" },
+            { id: "i_olho", nome: "Olho de Hórus", mod_at: 0, mod_df: 0, mod_vl: 2, mod_hp: 0, descricao: "+2 VL permanente" },
+            { id: "i_capa", nome: "Capa de Invisibilidade", mod_at: 0, mod_df: 0, mod_vl: 3, mod_hp: 0, descricao: "+3 VL permanente" }
+        ];
+
+        let estadoPartida = {
+            jogadores: {
+                p1: { nome: "Jogador 1", vitorias: 0 },
+                p2: { nome: "Jogador 2", vitorias: 0 }
+            },
+            rodadaAtual: 1,
+            fase: "setup", // setup, p1_gate, p1_select, p2_gate, p2_select, resolution
+            maos: {
+                p1: { herois: [], boosts: [], itens: [] },
+                p2: { herois: [], boosts: [], itens: [] }
+            },
+            escolhas: {
+                p1: { heroi: null, habilidade: null, boost: null, item: null },
+                p2: { heroi: null, habilidade: null, boost: null, item: null }
+            },
+            supremasUsadas: {
+                p1: false,
+                p2: false
+            }
+        };
+
+        function iniciarJogo() {
+            playSound('win');
+            const nome1 = document.getElementById("input-p1-name").value.trim() || "Jogador 1";
+            const nome2 = document.getElementById("input-p2-name").value.trim() || "Jogador 2";
+
+            estadoPartida.jogadores.p1.nome = nome1;
+            estadoPartida.jogadores.p2.nome = nome2;
+
+            document.getElementById("label-p1-name").innerText = nome1;
+            document.getElementById("label-p2-name").innerText = nome2;
+
+            // Embaralhar e distribuir aleatoriamente 5 heróis, 5 boosts e 5 itens para cada
+            estadoPartida.maos.p1.herois = embaralharEObter(COMPLETO_HEROIS, 5);
+            estadoPartida.maos.p2.herois = embaralharEObter(COMPLETO_HEROIS, 5);
+
+            estadoPartida.maos.p1.boosts = embaralharEObter(COMPLETO_BOOSTS, 5);
+            estadoPartida.maos.p2.boosts = embaralharEObter(COMPLETO_BOOSTS, 5);
+
+            estadoPartida.maos.p1.itens = embaralharEObter(COMPLETO_ITENS, 5);
+            estadoPartida.maos.p2.itens = embaralharEObter(COMPLETO_ITENS, 5);
+
+            document.getElementById("screen-setup").classList.add("hidden");
+            
+            // Entrar na fase de Gatekeeper do Jogador 1
+            irParaGatekeeper("p1");
+        }
+
+        function embaralharEObter(lista, quantidade) {
+            const copia = [...lista];
+            for (let i = copia.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copia[i], copia[j]] = [copia[j], copia[i]];
+            }
+            // Clona profundamente os objetos para evitar modificações compartilhadas indesejadas
+            return JSON.parse(JSON.stringify(copia.slice(0, quantidade)));
+        }
+
+        function alterarPlacar(player, quant) {
+            playSound('click');
+            estadoPartida.jogadores[player].vitorias = Math.max(0, estadoPartida.jogadores[player].vitorias + quant);
+            document.getElementById(`score-${player}`).innerText = estadoPartida.jogadores[player].vitorias;
+        }
+
+        function irParaGatekeeper(jogador) {
+            estadoPartida.fase = `${jogador}_gate`;
+            
+            document.getElementById("screen-setup").classList.add("hidden");
+            document.getElementById("screen-gameplay").classList.add("hidden");
+            document.getElementById("screen-resolution").classList.add("hidden");
+            
+            const gateScreen = document.getElementById("screen-gatekeeper");
+            gateScreen.classList.remove("hidden");
+
+            const nomeReal = estadoPartida.jogadores[jogador].nome;
+            document.getElementById("gatekeeper-player-name").innerText = nomeReal;
+            document.getElementById("gatekeeper-title").innerText = `Turno de ${nomeReal}`;
+            
+            if(jogador === "p1") {
+                document.getElementById("gatekeeper-icon").innerText = "🛡️";
+                document.getElementById("gatekeeper-player-name").className = "font-black text-blue-400";
+            } else {
+                document.getElementById("gatekeeper-icon").innerText = "🔥";
+                document.getElementById("gatekeeper-player-name").className = "font-black text-red-400";
+            }
+        }
+
+        function entrarTurnoAtivo() {
+            playSound('select');
+            const jogador = estadoPartida.fase.startsWith("p1") ? "p1" : "p2";
+            estadoPartida.fase = `${jogador}_select`;
+
+            document.getElementById("screen-gatekeeper").classList.add("hidden");
+            document.getElementById("screen-gameplay").classList.remove("hidden");
+
+            const nomeReal = estadoPartida.jogadores[jogador].nome;
+            const gameplayTitle = document.getElementById("gameplay-player-title");
+            gameplayTitle.innerText = nomeReal;
+            gameplayTitle.className = jogador === "p1" ? "text-sm font-black text-blue-400 uppercase" : "text-sm font-black text-red-400 uppercase";
+
+            // Desmarcar por padrão o "Foco Tático" de ocultação
+            document.getElementById("toggle-hide-unselected").checked = false;
+
+            renderizarDeckAtivo();
+            atualizarCalculadoraAtributos();
+        }
+
+        function renderizarDeckAtivo() {
+            const playerKey = estadoPartida.fase.startsWith("p1") ? "p1" : "p2";
+            const mao = estadoPartida.maos[playerKey];
+            const escolhas = estadoPartida.escolhas[playerKey];
+            const apenasSelecionados = document.getElementById("toggle-hide-unselected").checked;
+
+            // Renderizar Heróis
+            const containerHerois = document.getElementById("deck-herois");
+            containerHerois.innerHTML = "";
+            mao.herois.forEach((heroi, idx) => {
+                const estaMorto = heroi.hp <= 0;
+                if (estaMorto) return;
+
+                const selecionado = escolhas.heroi === idx;
+                
+                // Se o filtro de ocultação estiver ativo e este não for selecionado, esconde-se
+                if (apenasSelecionados && !selecionado) return;
+
+                const borderClass = selecionado 
+                    ? (playerKey === 'p1' ? 'border-blue-500 bg-blue-950/40 shadow-lg shadow-blue-500/10' : 'border-red-500 bg-red-950/40 shadow-lg shadow-red-500/10') 
+                    : 'border-slate-800 bg-slate-900 hover:border-slate-700';
+
+                containerHerois.innerHTML += `
+                    <div onclick="clicarHeroi(${idx})" class="cursor-pointer p-3 rounded-xl border transition-all ${borderClass}">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-xs ${selecionado ? 'text-amber-400' : 'text-slate-200'}">${heroi.nome}</span>
+                            <span class="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded uppercase font-bold">${heroi.classe}</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1.5 text-center my-2 bg-slate-950 p-1.5 rounded-lg border border-slate-800/60 font-mono text-xs font-black">
+                            <span class="text-red-400">❤️ ${heroi.hp}</span>
+                            <span class="text-blue-400">🛡️ ${heroi.df}</span>
+                            <span class="text-orange-400">⚔️ ${heroi.at}</span>
+                            <span class="text-green-400">⚡ ${heroi.vl}</span>
+                        </div>
+                        <div class="text-[9px] text-slate-400 leading-tight">
+                            <span class="font-bold text-amber-500/80">Passiva:</span> ${heroi.passiva}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Se herói foi selecionado, exibe as habilidades correspondentes
+            const secHabilidades = document.getElementById("section-habilidades");
+            if (escolhas.heroi !== null) {
+                secHabilidades.classList.remove("hidden");
+                const heroiAtivo = mao.herois[escolhas.heroi];
+                document.getElementById("desc-hab-ativa").innerText = heroiAtivo.ativa;
+                document.getElementById("desc-hab-suprema").innerText = heroiAtivo.suprema + (estadoPartida.supremasUsadas[playerKey] ? " (USADA)" : " (Disponível)");
+                
+                // Aplicar estilo aos botões de habilidade baseados na seleção
+                atualizarEstiloBotoesHabilidade(escolhas.habilidade);
+            } else {
+                secHabilidades.classList.add("hidden");
+            }
+
+            // Renderizar Boosts
+            const containerBoosts = document.getElementById("deck-boosts");
+            containerBoosts.innerHTML = "";
+            mao.boosts.forEach((boost, idx) => {
+                const selecionado = escolhas.boost === idx;
+                if (apenasSelecionados && !selecionado) return;
+
+                const borderClass = selecionado 
+                    ? 'border-emerald-500 bg-emerald-950/40 text-emerald-300 font-bold' 
+                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700';
+
+                containerBoosts.innerHTML += `
+                    <button onclick="clicarBoost(${idx})" class="w-full text-left text-[10px] p-2 rounded-lg border transition-all ${borderClass}">
+                        <div class="font-bold">🧪 ${boost.nome}</div>
+                        <div class="text-[8px] text-slate-500 mt-0.5">${boost.descricao}</div>
+                    </button>
+                `;
+            });
+
+            // Renderizar Itens
+            const containerItens = document.getElementById("deck-itens");
+            containerItens.innerHTML = "";
+            mao.itens.forEach((item, idx) => {
+                const selecionado = escolhas.item === idx;
+                if (apenasSelecionados && !selecionado) return;
+
+                const borderClass = selecionado 
+                    ? 'border-amber-500 bg-amber-950/40 text-amber-300 font-bold' 
+                    : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700';
+
+                containerItens.innerHTML += `
+                    <button onclick="clicarItem(${idx})" class="w-full text-left text-[10px] p-2 rounded-lg border transition-all ${borderClass}">
+                        <div class="font-bold">💍 ${item.nome}</div>
+                        <div class="text-[8px] text-slate-500 mt-0.5">${item.descricao}</div>
+                    </button>
+                `;
+            });
+        }
+
+        function clicarHeroi(idx) {
+            playSound('select');
+            const playerKey = estadoPartida.fase.startsWith("p1") ? "p1" : "p2";
+            estadoPartida.escolhas[playerKey].heroi = idx;
+            // Reseta habilidade caso mude de herói
+            estadoPartida.escolhas[playerKey].habilidade = "Ativa"; 
+            renderizarDeckAtivo();
+            atualizarCalculadoraAtributos();
+        }
+
+        function selecionarHabilidade(tipo) {
+            const playerKey = estadoPartida.fase.startsWith("p1") ? "p1" : "p2";
+            if (tipo === 'Suprema' && estadoPartida.supremasUsadas[playerKey]) {
+                // Impede usar a suprema caso já tenha sido consumida nesta partida
+                return;
+            }
+            playSound('select');
+            estadoPartida.escolhas[playerKey].habilidade = tipo;
+            atualizarEstiloBotoesHabilidade(tipo);
+            atualizarCalculadoraAtributos();
+        }
+
+        function atualizarEstiloBotoesHabilidade(tipo) {
+            const btnAtiva = document.getElementById("btn-hab-ativa");
+            const btnSuprema = document.getElementById("btn-hab-suprema");
+
+            if (tipo === 'Ativa') {
+                btnAtiva.className = "bg-purple-950/60 border-2 border-purple-500 p-2.5 rounded-xl text-left transition-all";
+                btnSuprema.className = "bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-left transition-all opacity-60";
+            } else if (tipo === 'Suprema') {
+                btnAtiva.className = "bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-left transition-all opacity-60";
+                btnSuprema.className = "bg-red-950/60 border-2 border-red-500 p-2.5 rounded-xl text-left transition-all";
+            } else {
+                btnAtiva.className = "bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-left transition-all";
+                btnSuprema.className = "bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-left transition-all";
+            }
+        }
+
+        function clicarBoost(idx) {
+            playSound('select');
+            const playerKey = estadoPartida.fase.startsWith("p1") ? "p1" : "p2";
+            if (estadoPartida.escolhas[playerKey].boost === idx) {
+                estadoPartida.escolhas[playerKey].boost = null; // Toggle para desmarcar
+            } else {
+                estadoPartida.escolhas[playerKey].boost = idx;
+            }
+            renderizarDeckAtivo();
+            atualizarCalculadoraAtributos();
+        }
+
+        function clicarItem(idx) {
+            playSound('select');
+            const playerKey = estadoPartida.fase.startsWith("p1") ? "p1" : "p2";
+            if (estadoPartida.escolhas[playerKey].item === idx) {
+                estadoPartida.escolhas[playerKey].item = null; // Toggle para desmarcar
+            } else {
+                estadoPartida.escolhas[playerKey].item = idx;
+            }
+            renderizarDeckAtivo();
+            atualizarCalculadoraAtributos();
+        }
+
+        function obterAtributosFinaisCalculados(playerKey) {
+            const mao = estadoPartida.maos[playerKey];
+            const esc = estadoPartida.escolhas[playerKey];
+
+            if (esc.heroi === null) return null;
+
+            const baseHeroi = mao.herois[esc.heroi];
+            let hp = baseHeroi.hp;
+            let df = baseHeroi.df;
+            let at = baseHeroi.at;
+            let vl = baseHeroi.vl;
+
+            // Variáveis descritivas de alteração para fins informativos
+            let logsCalculadora = [];
+
+            // Adição de Itens Permanentes
+            if (esc.item !== null) {
+                const item = mao.itens[esc.item];
+                if (item.mod_hp) { hp += item.mod_hp; logsCalculadora.push(`+${item.mod_hp} HP (${item.nome})`); }
+                if (item.mod_df) { df += item.mod_df; logsCalculadora.push(`+${item.mod_df} DF (${item.nome})`); }
+                if (item.mod_at) { at += item.mod_at; logsCalculadora.push(`+${item.mod_at} AT (${item.nome})`); }
+                if (item.mod_vl) { vl += item.mod_vl; logsCalculadora.push(`+${item.mod_vl} VL (${item.nome})`); }
+            }
+
+            // Adição de Boosts Consumíveis
+            if (esc.boost !== null) {
+                const boost = mao.boosts[esc.boost];
+                if (boost.tipo === 'ataque') { at += boost.valor; logsCalculadora.push(`+${boost.valor} AT (${boost.nome})`); }
+                if (boost.tipo === 'defesa') { df += boost.valor; logsCalculadora.push(`+${boost.valor} DF (${boost.nome})`); }
+                if (boost.tipo === 'velocidade') { vl += boost.valor; logsCalculadora.push(`+${boost.valor} VL (${boost.nome})`); }
+                if (boost.tipo === 'cura') { hp = Math.min(30, hp + boost.valor); logsCalculadora.push(`+${boost.valor} HP Curado (${boost.nome})`); }
+                if (boost.tipo === 'sacrificio') { hp = Math.max(1, hp - 3); at += boost.valor; logsCalculadora.push(`-3 HP / +${boost.valor} AT (Sacrifício)`); }
+            }
+
+            // Modificador de Habilidade Especial (Simulada em Atributo Direto se aplicável)
+            if (esc.habilidade === 'Ativa') {
+                if (baseHeroi.id === 'aquiles') { vl += 3; logsCalculadora.push(`+3 VL (Habilidade Ativa)`); }
+                if (baseHeroi.id === 'isis') { at += 3; df += 3; logsCalculadora.push(`+3 AT/+3 DF (Habilidade Ativa)`); }
+                if (baseHeroi.id === 'arthur') { hp = Math.min(30, hp + 4); logsCalculadora.push(`+4 HP Curado (Habilidade Ativa)`); }
+            } else if (esc.habilidade === 'Suprema') {
+                if (baseHeroi.id === 'thor') { at *= 2; logsCalculadora.push(`AT Dobrado (Habilidade Suprema)`); }
+                if (baseHeroi.id === 'arthur') { at += 5; logsCalculadora.push(`+5 AT Permanente (Habilidade Suprema)`); }
+                if (baseHeroi.id === 'heimdall') { df += 10; logsCalculadora.push(`+10 DF Permanente (Habilidade Suprema)`); }
+            }
+
+            return { hp, df, at, vl, logs: logsCalculadora };
+        }
+
+        function atualizarCalculadoraAtributos() {
+            const playerKey = estadoPartida.fase.startsWith("p1") ? "p1" : "p2";
+            const calculo = obterAtributosFinaisCalculados(playerKey);
+
+            if (!calculo) {
+                document.getElementById("calc-hp").innerText = "-";
+                document.getElementById("calc-df").innerText = "-";
+                document.getElementById("calc-at").innerText = "-";
+                document.getElementById("calc-vl").innerText = "-";
+                return;
+            }
+
+            document.getElementById("calc-hp").innerText = calculo.hp;
+            document.getElementById("calc-df").innerText = calculo.df;
+            document.getElementById("calc-at").innerText = calculo.at;
+            document.getElementById("calc-vl").innerText = calculo.vl;
+        }
+
+        function salvarEscolhaOculta() {
+            const jogador = estadoPartida.fase.startsWith("p1") ? "p1" : "p2";
+            const esc = estadoPartida.escolhas[jogador];
+
+            if (esc.heroi === null) {
+                alert("Você precisa escolher obrigatoriamente um Herói antes de confirmar!");
+                return;
+            }
+
+            if (jogador === "p1") {
+                // Ir para Gatekeeper do Jogador 2
+                irParaGatekeeper("p2");
+            } else {
+                // Ambos escolheram. Ir para resolução
+                processarEVisualizarResolucao();
+            }
+        }
+
+        function processarEVisualizarResolucao() {
+            playSound('combat');
+            estadoPartida.fase = "resolution";
+
+            document.getElementById("screen-gameplay").classList.add("hidden");
+            document.getElementById("screen-resolution").classList.remove("hidden");
+
+            const p1Mao = estadoPartida.maos.p1;
+            const p2Mao = estadoPartida.maos.p2;
+
+            const p1Esc = estadoPartida.escolhas.p1;
+            const p2Esc = estadoPartida.escolhas.p2;
+
+            // Heróis Base
+            const h1 = p1Mao.herois[p1Esc.heroi];
+            const h2 = p2Mao.herois[p2Esc.heroi];
+
+            // Atributos modificados
+            const calc1 = obterAtributosFinaisCalculados("p1");
+            const calc2 = obterAtributosFinaisCalculados("p2");
+
+            // Atualizar ficha visual de revelação rápida
+            document.getElementById("rev-p1-owner").innerText = estadoPartida.jogadores.p1.nome;
+            document.getElementById("rev-p1-name").innerText = h1.nome;
+            document.getElementById("rev-p1-hp").innerText = `❤️ ${calc1.hp}`;
+            document.getElementById("rev-p1-df").innerText = `🛡️ ${calc1.df}`;
+            document.getElementById("rev-p1-at").innerText = `⚔️ ${calc1.at}`;
+            document.getElementById("rev-p1-vl").innerText = `⚡ ${calc1.vl}`;
+            
+            let p1Det = `Classe: ${h1.classe}<br>Usa: ${p1Esc.habilidade}`;
+            if(p1Esc.item !== null) p1Det += `<br>Item: ${p1Mao.itens[p1Esc.item].nome}`;
+            if(p1Esc.boost !== null) p1Det += `<br>Boost: ${p1Mao.boosts[p1Esc.boost].nome}`;
+            document.getElementById("rev-p1-details").innerHTML = p1Det;
+
+            document.getElementById("rev-p2-owner").innerText = estadoPartida.jogadores.p2.nome;
+            document.getElementById("rev-p2-name").innerText = h2.nome;
+            document.getElementById("rev-p2-hp").innerText = `❤️ ${calc2.hp}`;
+            document.getElementById("rev-p2-df").innerText = `🛡️ ${calc2.df}`;
+            document.getElementById("rev-p2-at").innerText = `⚔️ ${calc2.at}`;
+            document.getElementById("rev-p2-vl").innerText = `⚡ ${calc2.vl}`;
+
+            let p2Det = `Classe: ${h2.classe}<br>Usa: ${p2Esc.habilidade}`;
+            if(p2Esc.item !== null) p2Det += `<br>Item: ${p2Mao.itens[p2Esc.item].nome}`;
+            if(p2Esc.boost !== null) p2Det += `<br>Boost: ${p2Mao.boosts[p2Esc.boost].nome}`;
+            document.getElementById("rev-p2-details").innerHTML = p2Det;
+
+            // Executar Simulação Lógica do Combate
+            const logBox = document.getElementById("combat-log");
+            logBox.innerHTML = "";
+
+            let logsResolucao = [];
+
+            // Logs de buffs iniciais
+            if(calc1.logs.length > 0) logsResolucao.push(`<span class='text-blue-400'>[J1]</span> preparou: ${calc1.logs.join(", ")}`);
+            if(calc2.logs.length > 0) logsResolucao.push(`<span class='text-red-400'>[J2]</span> preparou: ${calc2.logs.join(", ")}`);
+
+            // Resolvendo ordem de iniciativa baseada na velocidade computada final
+            let p1Primeiro = calc1.vl >= calc2.vl;
+            
+            // Tratamento especial Heimdall passiva
+            if(h2.id === 'heimdall' && calc1.vl === calc2.vl) p1Primeiro = false;
+            if(h1.id === 'heimdall' && calc1.vl === calc2.vl) p1Primeiro = true;
+            // Hermes sempre age primeiro
+            if(h1.id === 'hermes') p1Primeiro = true;
+            if(h2.id === 'hermes' && h1.id !== 'hermes') p1Primeiro = false;
+
+            logsResolucao.push(`⚡ <span class='text-amber-400 font-bold'>Iniciativa:</span> ` + (p1Primeiro ? `${h1.nome} age primeiro!` : `${h2.nome} age primeiro!`));
+
+            let hp1 = calc1.hp;
+            let hp2 = calc2.hp;
+
+            if (p1Primeiro) {
+                // Turno do Jogador 1 ataca primeiro
+                let dano = Math.max(0, calc1.at - calc2.df);
+                hp2 -= dano;
+                logsResolucao.push(`🗡️ <span class='text-blue-400'>${h1.nome}</span> ataca e causa <span class='text-orange-400 font-bold'>${dano}</span> de dano em ${h2.nome} (Defesa reduziu o restante).`);
+
+                if (hp2 > 0) {
+                    // Turno do Jogador 2 contra-ataca
+                    let danoContra = Math.max(0, calc2.at - calc1.df);
+                    hp1 -= danoContra;
+                    logsResolucao.push(`🗡️ <span class='text-red-400'>${h2.nome}</span> contra-ataca e causa <span class='text-orange-400 font-bold'>${danoContra}</span> de dano em ${h1.nome}.`);
+                } else {
+                    logsResolucao.push(`💀 <span class='text-red-400'>${h2.nome}</span> caiu antes de poder contra-atacar!`);
+                }
+            } else {
+                // Turno do Jogador 2 ataca primeiro
+                let dano = Math.max(0, calc2.at - calc1.df);
+                hp1 -= dano;
+                logsResolucao.push(`🗡️ <span class='text-red-400'>${h2.nome}</span> ataca e causa <span class='text-orange-400 font-bold'>${dano}</span> de dano em ${h1.nome}.`);
+
+                if (hp1 > 0) {
+                    // Turno do Jogador 1 contra-ataca
+                    let danoContra = Math.max(0, calc1.at - calc2.df);
+                    hp2 -= danoContra;
+                    logsResolucao.push(`🗡️ <span class='text-blue-400'>${h1.nome}</span> contra-ataca e causa <span class='text-orange-400 font-bold'>${danoContra}</span> de dano em ${h2.nome}.`);
+                } else {
+                    logsResolucao.push(`💀 <span class='text-blue-400'>${h1.nome}</span> caiu antes de poder contra-atacar!`);
+                }
+            }
+
+            // Aplicar de volta a vida remanescente calculada nas cartas do Deck Permanente
+            h1.hp = Math.max(0, hp1);
+            h2.hp = Math.max(0, hp2);
+
+            // Determinar Vencedores da Rodada
+            let j1Derrotado = h1.hp <= 0;
+            let j2Derrotado = h2.hp <= 0;
+
+            if (j1Derrotado && j2Derrotado) {
+                logsResolucao.push(`🤝 <span class='text-amber-400 font-bold'>Empate de Sangue!</span> Ambos heróis foram derrubados na mesma rodada.`);
+            } else if (j1Derrotado) {
+                logsResolucao.push(`🏆 <span class='text-red-400 font-bold'>Vitória do Confronto para ${estadoPartida.jogadores.p2.nome}!</span>`);
+                alterarPlacar('p2', 1);
+            } else if (j2Derrotado) {
+                logsResolucao.push(`🏆 <span class='text-blue-400 font-bold'>Vitória do Confronto para ${estadoPartida.jogadores.p1.nome}!</span>`);
+                alterarPlacar('p1', 1);
+            } else {
+                logsResolucao.push(`🛡️ Ambos sobreviventes! O confronto continua na próxima rodada.`);
+            }
+
+            // Se usou Habilidade Suprema, marca para indisponibilizar na partida
+            if (p1Esc.habilidade === 'Suprema') estadoPartida.supremasUsadas.p1 = true;
+            if (p2Esc.habilidade === 'Suprema') estadoPartida.supremasUsadas.p2 = true;
+
+            // Renderizar logs na interface
+            logsResolucao.forEach(log => {
+                logBox.innerHTML += `<div class="border-b border-slate-900 pb-1">${log}</div>`;
+            });
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function avancarParaProximaRodada() {
+            playSound('click');
+            
+            // Consumir os Boosts jogados retirando-os da mão secreta dos jogadores
+            const p1Esc = estadoPartida.escolhas.p1;
+            const p2Esc = estadoPartida.escolhas.p2;
+
+            if (p1Esc.boost !== null) {
+                estadoPartida.maos.p1.boosts.splice(p1Esc.boost, 1);
+            }
+            if (p2Esc.boost !== null) {
+                estadoPartida.maos.p2.boosts.splice(p2Esc.boost, 1);
+            }
+
+            // Resetar estrutura de escolhas temporárias para a próxima rodada
+            estadoPartida.escolhas.p1 = { heroi: null, Habilidade: "Ativa", boost: null, item: null };
+            estadoPartida.escolhas.p2 = { heroi: null, Habilidade: "Ativa", boost: null, item: null };
+
+            // Incrementar contador de rodada
+            estadoPartida.rodadaAtual += 1;
+
+            if (estadoPartida.rodadaAtual > 10) {
+                alert("Fim do limite de 10 rodadas! O jogador com maior placar manual é o vencedor. Em caso de empate, avaliem o herói remanescente de maior vida.");
+                resetarDueloCompleto();
+                return;
+            }
+
+            document.getElementById("round-indicator").innerText = `Rodada ${estadoPartida.rodadaAtual}/10`;
+
+            // Retornar ao loop iniciando pelo Jogador 1
+            irParaGatekeeper("p1");
+        }
+
+        function resetarDueloCompleto() {
+            playSound('win');
+            estadoPartida = {
+                jogadores: {
+                    p1: { nome: "Jogador 1", vitorias: 0 },
+                    p2: { nome: "Jogador 2", vitorias: 0 }
+                },
+                rodadaAtual: 1,
+                fase: "setup",
+                maos: {
+                    p1: { herois: [], boosts: [], itens: [] },
+                    p2: { herois: [], boosts: [], itens: [] }
+                },
+                escolhas: {
+                    p1: { heroi: null, habilidade: "Ativa", boost: null, item: null },
+                    p2: { heroi: null, habilidade: "Ativa", boost: null, item: null }
+                },
+                supremasUsadas: {
+                    p1: false,
+                    p2: false
+                }
+            };
+
+            document.getElementById("score-p1").innerText = "0";
+            document.getElementById("score-p2").innerText = "0";
+            document.getElementById("round-indicator").innerText = "Rodada 1/10";
+            
+            document.getElementById("screen-setup").classList.remove("hidden");
+            document.getElementById("screen-gatekeeper").classList.add("hidden");
+            document.getElementById("screen-gameplay").classList.add("hidden");
+            document.getElementById("screen-resolution").classList.add("hidden");
+        }
+    </script>
+</body>
+</html>
